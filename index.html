@@ -1,40 +1,181 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desakuu</title>
+    <title>Desa Beraim</title>
     <link rel="stylesheet" href="assets/leaflet.css">
     <script src="assets/leaflet.js"></script>
     <script src="Beraim.geojson.js"></script>
-    <script src="Beraim0.geojson.js"></script>
-<style>
-    body,html{
-        padding: 0px;
-        margin: 0px;
-        height: 100%;
-    }
-    #map{
-        height: 100%;
-    }
-</style>
+    <script src="Dakung.geojson.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <style>
+        body, html {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+        #map {
+            height: 100%;
+        }
+
+        .popup-image {
+            width: 100px;
+            height: auto;
+        }
+    </style>
 </head>
- 
+
 <body>
     <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <script>
-    
-        const map = L.map('map').setView([-8.7111953,116.3446173], 13);
-    
-        const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        const map = L.map('map').setView([-8.7111953, 116.3446173], 13);
+
+        // Layer Group untuk fitur tambahan
+        const Dakunganjay = L.layerGroup();
+        const Mekeanjay = L.layerGroup();
+
+        // Memuat dan menambahkan GeoJSON dengan gaya dan popup
+        L.geoJSON(Dakung, {
+            style: function (feature) {
+                return {
+                    color: "#ff9000",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.7
+                };
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.name) {
+                    layer.bindPopup(feature.properties.name);
+                }
+            }
+        }).addTo(Dakunganjay);
+
+        L.geoJSON(Meke, {
+            style: function (feature) {
+                return {
+                    color: "#ff8700",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.7
+                };
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.name) {
+                    layer.bindPopup(feature.properties.name);
+                }
+            }
+        }).addTo(Mekeanjay);
+
+        // Tile layer peta jalanan (OpenStreetMap)
+        const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        });
+
+        // Tile layer peta satelit (ESRI)
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        // Menambahkan OSM sebagai layer default
+        osmLayer.addTo(map);
+
+        // Layer batas desa
+        var geojsonStyle = {
+            "color": "#ff7800",
+            "weight": 2,
+            "opacity": 1
+        };
+
+        var BeraimBoundary = L.geoJSON(Beraim, {
+            style: geojsonStyle
         }).addTo(map);
-        var Beraim = L.geoJSON([Beraim], {
-		style:function(feature){
-			return feature.properties && feature.properties.style;
-		}
-	}).addTo(map);
+
+        // Definisi ikon
+        const iconrumahku = L.icon({
+            iconUrl: 'assets/images/rumahku.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+        const iconKantorDesa = L.icon({
+            iconUrl: 'assets/images/congress.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+        const iconPendidikan = L.icon({
+            iconUrl: 'assets/images/school.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+        const iconIbadah = L.icon({
+            iconUrl: 'assets/images/mosquee.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        // Cluster untuk masing-masing layer
+        var kantorDesaCluster = L.markerClusterGroup();
+        var pendidikanCluster = L.markerClusterGroup();
+        var ibadahCluster = L.markerClusterGroup();
+
+        // Marker Kantor Desa
+        L.marker([-8.706475, 116.339405], {icon: iconKantorDesa}).bindPopup("<b>Kantor Desa Beraim</b>").addTo(kantorDesaCluster);
+        L.marker([-8.709915, 116.341277], {icon: iconrumahku}).bindPopup("<b>Rumah Istri 1</b><img src='assets/images/istri.jpeg' class='popup-image' alt='rumahku'>").addTo(kantorDesaCluster);
+        L.marker([-8.709847, 116.341057], {icon: iconrumahku}).bindPopup("<b>Rumah Istri 2</b><img src='assets/images/istrill.jpg' class='popup-image' alt='rumahku'>").addTo(kantorDesaCluster);
+
+        // Marker Pendidikan
+        L.marker([-8.709375, 116.339024], {icon: iconPendidikan}).bindPopup("<b>SDN Dakung</b>").addTo(pendidikanCluster);
+        L.marker([-8.706967, 116.337908], {icon: iconPendidikan}).bindPopup("<b>SDN 2 Beraim</b>").addTo(pendidikanCluster);
+        L.marker([-8.703945, 116.339083], {icon: iconPendidikan}).bindPopup("<b>SDN 3 Beraim</b>").addTo(pendidikanCluster);
+        L.marker([-8.703106, 116.342017], {icon: iconPendidikan}).bindPopup("<b>MTS Darul Ulum</b>").addTo(pendidikanCluster);
+        L.marker([-8.704317, 116.338547], {icon: iconPendidikan}).bindPopup("<b>SMK AL Hasanain</b>").addTo(pendidikanCluster);
+
+        // Marker Ibadah
+        L.marker([-8.709216, 116.340982], {icon: iconIbadah}).bindPopup("<b>Masjid Beraim</b>").addTo(ibadahCluster);
+        L.marker([-8.706522, 116.33588], {icon: iconIbadah}).bindPopup("<b>Masjid Sendong</b>").addTo(ibadahCluster);
+        L.marker([-8.703214, 116.338423], {icon: iconIbadah}).bindPopup("<b>Masjid Petak</b>").addTo(ibadahCluster);
+        L.marker([-8.700053, 116.345621], {icon: iconIbadah}).bindPopup("<b>Masjid Tanggor</b>").addTo(ibadahCluster);
+
+        // Menambahkan kontrol layer
+        var baseMaps = {
+            "Peta Jalanan": osmLayer,
+            "Peta Satelit": satelliteLayer
+        };
+
+        var overlayMaps = {
+            "Batas Desa": BeraimBoundary,
+            "Kantor Desa": kantorDesaCluster,
+            "Fasilitas Pendidikan": pendidikanCluster,
+            "Fasilitas Ibadah": ibadahCluster,
+            "Dakung": Dakunganjay,
+            "Meke": Mekeanjay
+        };
+
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+        // Menampilkan cluster secara default
+        kantorDesaCluster.addTo(map);
+        pendidikanCluster.addTo(map);
+        ibadahCluster.addTo(map);
+        BeraimBoundary.addTo(map);
+
+        // Event klik pada peta
+        function onMapClick(e) {
+            alert("Anda mengklik peta di " + e.latlng);
+        }
+        map.on('click', onMapClick);
     </script>
-</body> 
+</body>
 </html>
